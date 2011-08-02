@@ -3,11 +3,40 @@
 %%% See file COPYING.
 
 -module (extremeforge).
+-export ([main/1]).
 -export ([start/1]).
 -export ([start/0]).
 -export ([run/1]).
 -export ([run/0]).
 -export ([stop/0]).
+
+
+main (Params) ->
+    {Mode, Arguments} = arguments (mode (Params)),
+    apply(extremeforge, Mode, Arguments),
+    wait_for_ever ().
+
+mode (["-snapshot"| Rest]) ->
+    {run, Rest};
+mode (Other) ->
+    {start, Other}.
+
+arguments ({Mode,[]}) ->
+    {Mode, []};
+arguments ({Mode, Other}) ->
+    {Mode, [Other]}.
+    
+
+
+	    
+
+		      
+		 
+wait_for_ever () ->
+    receive 
+	close -> ok
+    end.
+
 
 start () ->
     {ok, CWD} = file: get_cwd (),

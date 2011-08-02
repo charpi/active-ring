@@ -30,29 +30,26 @@ the ebin directory below where you unpacked the tarball. That
 directory is referred to in the following instructions as
 /path/to/install/ebin.
 
+Packaging
+---------
+
+% ./pack
+
+This script build the activering executable
+
 Usage
 -----
 
-To use Extreme Forge interactively (for continuous compiling and testing
-of your project as you develop):
+Copy activering executable in your $PATH.
 
-% cd /path/to/your/project
-% erl -sname extremeforge -pa /path/to/install/ebin
-Erlang (BEAM) emulator version 5.6.3 [source] [smp:2]
-Eshell V5.6.3  (abort with ^G)
-(extremeforge@bill)1> extremeforge:start().
+% activering [directories]
 
-To stop:
-(extremeforge@bill)2> extremeforge:stop().
+Start the activering server. The server will observe the list of directories and execute the tests.
+If no directories are provided, activering observes the working directory.
 
-To use Extreme Forge in a continuous integration tool (from the command
-line, with a single run of compilation and tests, and an exit code):
-% cd /path/to/your/project
-% erl -sname extremeforge -pa /path/to/install/ebin -noinput \
-> -run extremeforge run > extremeforge.log
+% activering -snapshot [directories]
 
-This provides an exit code of 0 if all modules compiled and all tests
-passed, 1 otherwise.
+Activering will discover the tests, run them and exit.
 
 Emacs
 -----
@@ -69,10 +66,7 @@ To achieve this add the following to your .emacs:
 				  (file-exists-p "Makefile"))
 			(set
 			 (make-local-variable 'compile-command)
-			 (concat
-			  "erl -sname forge -noinput "
-			  "-pa /path/to/install/ebin "
-			  " -run extremeforge start"))))))
+			 (concat "activering"))))))
 
 From an Erlang source file buffer (in erlang-mode), you can now call
 M-x compile to start Extreme Forge in a compilation buffer where it

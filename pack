@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# -*- sh -*-
+set -o nounset
+set -e
+
+cd ebin;rm *.beam;erl -make;cd ..
+
+erl -pa ebin -noinput -s packer pack -s init stop
+chmod 777 ./activering
