@@ -51,6 +51,13 @@ If no directories are provided, activering observes the working directory.
 
 Activering will discover the tests, run them and exit.
 
+% activering -output Module
+
+To use another output renderer than the default text based one, just
+provide the name of the module containing your own renderer. The
+module must contains an init function with arity 0. This function must
+return a PID.
+
 Emacs
 -----
 
