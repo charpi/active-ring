@@ -16,28 +16,6 @@ main (Params) ->
     apply(extremeforge, Mode, Arguments),
     wait_for_ever ().
 
-mode (["-snapshot"| Rest]) ->
-    {run, Rest};
-mode (Other) ->
-    {start, Other}.
-
-arguments ({Mode,[]}) ->
-    {Mode, []};
-arguments ({Mode, Other}) ->
-    {Mode, [Other]}.
-    
-
-
-	    
-
-		      
-		 
-wait_for_ever () ->
-    receive 
-	close -> ok
-    end.
-
-
 start () ->
     {ok, CWD} = file: get_cwd (),
     start ([CWD]).
@@ -102,3 +80,20 @@ exit_code ({M, M, 0, T, T, 0}) ->
     0;
 exit_code (_) ->
     1.
+
+
+
+mode (["-snapshot"| Rest]) ->
+    {run, Rest};
+mode (Other) ->
+    {start, Other}.
+
+arguments ({Mode,[]}) ->
+    {Mode, []};
+arguments ({Mode, Other}) ->
+    {Mode, [Other]}.
+    
+wait_for_ever () ->
+    receive 
+	close -> ok
+    end.
