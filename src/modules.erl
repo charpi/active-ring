@@ -24,8 +24,9 @@ compile (File_name, Options) ->
     end.
 
 compile (Fun, Parameter, User_options) ->
+    Parse_transform = {parse_transform, transform_eunit},
     Options = [binary, return, warn_unused_import, debug_info | User_options],
-    Fun (Parameter, Options).
+    Fun (Parameter, [Parse_transform|Options]).
 
 to_binary (File_name) ->
     {ok, _, Binary, _} = compile (fun compile: file/2, File_name, []),
