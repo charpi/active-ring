@@ -1,3 +1,6 @@
+%%% Copyright (C) Nicolas Charpentier
+%%% All rights reserved.
+%%% See file COPYING.
 -module(transform_eunit).
 
 -export([parse_transform/2]).
