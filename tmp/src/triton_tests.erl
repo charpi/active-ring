@@ -12,8 +12,13 @@ active_t() ->
 a_test() ->
     ?assertMatch(a,a).
 
-
 b_test() ->
     ?assertMatch(a,b).
 
-    
+basic_test_() ->    
+     fun() ->
+ 	    ?assertMatch(a,c)
+     end.
+
+basic2_test_() ->
+    fun active_t/0.

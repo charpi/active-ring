@@ -27,7 +27,8 @@ transform_eunit_tests(false, Forms) ->
     Forms;
 transform_eunit_tests(true, Forms) ->
     {Before,After} = split_attributes(Forms),
-    Before ++ tests(Forms) ++ After.
+    {Attributes, Code} = tests(Forms),
+    Before ++ Attributes ++ Code ++ After.
 
 
 split_attributes(Forms) ->
@@ -40,20 +41,52 @@ split_attributes([X|Otther],Acc) ->
 
 
 tests(Forms) ->
-    tests(Forms, []).
+    tests(Forms, {[],[]}).
 
 tests([], Acc) ->
     Acc;
-tests([{function,_,Name,0,_}|Tail], Acc) ->
-    NewAcc = case '?end_with_test'(atom_to_list(Name)) of
-		 true ->
-		     [{attribute,1,test,Name}|Acc];
+tests([{function,_,Name,0,Body}|Tail], {Attr,Code}) ->
+    NewAcc = case '?test'(atom_to_list(Name)) of
+		 simple ->
+		     {[export(Name)|Attr], Code};
+		 generator ->
+		     generate_generator(Name, Body, {Attr,Code});
 		 false ->
-		     Acc
+		     {Attr,Code}
 	     end,
     tests(Tail,NewAcc);
 tests([_|Tail], Acc) ->
     tests(Tail,Acc).
 
-'?end_with_test'(String) ->
-    0 =/= string:str(String,"_test").
+'?test'(String) ->
+    case string:str(String,"_test_") of
+	0 ->
+	    case string:str(String, "_test") of
+		X when X+4 == length(String) ->
+		    simple;
+		_ ->
+		    false
+	    end;
+	X when X+5 == length(String) ->
+	    generator;
+	_ ->
+	    false
+    end.
+
+export(Name) ->
+    {attribute,1,test,Name}.
+
+generate_generator(Name, [{clause,_,[],[],[{'fun',_,_}]}]=Clause, {Attr,Code}) ->
+    ActiveRingName = list_to_atom(atom_to_list(Name) ++ "__activering"),
+    
+    [{clause,Line,[],[],[Fun]}] = Clause,
+    Wrapper = {function,Line,ActiveRingName,0,
+	       [{clause,Line,[],[],[{call,Line,{atom,Line,apply},
+				    [Fun, {nil, Line}]}]}]},
+    {[export(ActiveRingName),
+      {attribute,0,export,[{ActiveRingName,0}]}
+      |Attr],[Wrapper|Code]};
+generate_generator(Name, Body, Acc) ->
+    io:format("-~p-~n~p",[Name,Body]),
+    Acc.
+
