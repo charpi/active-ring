@@ -50,7 +50,9 @@ tests([{function,_,Name,0,Body}|Tail], {Attr,Code}) ->
 		 simple ->
 		     {[export(Name)|Attr], Code};
 		 generator ->
-		     generate_generator(Name, Body, {Attr,Code});
+		     Res = generate_generator(Name, Body, {Attr,Code}),
+		     io:format("~p~n",[Res]),
+		     Res;
 		 false ->
 		     {Attr,Code}
 	     end,
@@ -77,8 +79,7 @@ export(Name) ->
     {attribute,1,test,Name}.
 
 generate_generator(Name, [{clause,_,[],[],[{'fun',_,_}]}]=Clause, {Attr,Code}) ->
-    ActiveRingName = list_to_atom(atom_to_list(Name) ++ "__activering"),
-    
+    ActiveRingName = list_to_atom(atom_to_list(Name) ++ "_activering"),
     [{clause,Line,[],[],[Fun]}] = Clause,
     Wrapper = {function,Line,ActiveRingName,0,
 	       [{clause,Line,[],[],[{call,Line,{atom,Line,apply},
@@ -86,7 +87,18 @@ generate_generator(Name, [{clause,_,[],[],[{'fun',_,_}]}]=Clause, {Attr,Code}) -
     {[export(ActiveRingName),
       {attribute,0,export,[{ActiveRingName,0}]}
       |Attr],[Wrapper|Code]};
-generate_generator(Name, Body, Acc) ->
-    io:format("-~p-~n~p",[Name,Body]),
-    Acc.
-
+generate_generator(Name, [{clause,Line,[],[],[{tuple,_,Elts}]}], {Attr,Code}) 
+  when length(Elts) == 2 ->
+    case lists:all(fun({atom,_,_}) -> true ; (_) -> false end, Elts) of
+	false -> {Attr,Code};
+	true ->
+	    ActiveRingName = list_to_atom(atom_to_list(Name) ++ "_activering"),
+	    Wrapper = {function,Line,ActiveRingName,0,
+		       [{clause,Line,[],[],[{call,Line,{atom,Line,apply},
+					     Elts ++[{nil, Line}]}]}]},
+	    
+	    {[export(ActiveRingName), 
+	      {attribute,0,export,[{ActiveRingName,0}]} | Attr],
+	     [Wrapper|Code]}
+	      
+    end.

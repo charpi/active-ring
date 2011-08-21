@@ -2,12 +2,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--test(active_t).
-
 -export([active_t/0]).
-
-active_t() ->
-    9 = 10 - 1.
 
 a_test() ->
     ?assertMatch(a,a).
@@ -20,5 +15,11 @@ basic_test_() ->
  	    ?assertMatch(a,c)
      end.
 
+active_t() ->
+    9 = 10 - 1.
+
 basic2_test_() ->
     fun active_t/0.
+
+basic3_test_() ->
+    {?MODULE, active_t}.
