@@ -7,7 +7,6 @@
 
 parse_transform (Forms, _Options) ->
     Res = transform_eunit_tests(is_eunit(Forms), Forms),
-    io:format("~p~n--- ~p~n",[Forms, Res]),
     Res.
 
 is_eunit([]) ->
