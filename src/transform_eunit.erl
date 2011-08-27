@@ -6,7 +6,9 @@
 -export([parse_transform/2]).
 
 parse_transform (Forms, _Options) ->
-    transform_eunit_tests(is_eunit(Forms), Forms).
+    Res = transform_eunit_tests(is_eunit(Forms), Forms),
+    io:format("~p~n--- ~p~n",[Forms, Res]),
+    Res.
 
 is_eunit([]) ->
     false;
@@ -30,7 +32,6 @@ transform_eunit_tests(true, Forms) ->
     {Attributes, Code} = tests(Forms),
     Before ++ Attributes ++ Code ++ After.
 
-
 split_attributes(Forms) ->
     split_attributes(lists:reverse(Forms),[]).
 
@@ -38,7 +39,6 @@ split_attributes([{attribute,_,_,_} = Att|Other], Acc) ->
     {lists:reverse([Att|Other]), Acc};
 split_attributes([X|Otther],Acc) ->
     split_attributes(Otther,[X|Acc]).
-
 
 tests(Forms) ->
     tests(Forms, {[],[]}).
@@ -50,7 +50,8 @@ tests([{function,_,Name,0,Body}|Tail], {Attr,Code}) ->
 		 simple ->
 		     {[export(Name)|Attr], Code};
 		 generator ->
-		     Res = generate_generator(Name, Body, {Attr,Code}),
+		     [{clause,Line,[],[],FunctionBody}] = Body,
+		     Res = generate_generator(Name, Line, FunctionBody, {Attr,Code}),
 		     io:format("~p~n",[Res]),
 		     Res;
 		 false ->
@@ -78,19 +79,24 @@ tests([_|Tail], Acc) ->
 export(Name) ->
     {attribute,1,test,Name}.
 
-generate_generator(Name, [{clause,_,[],[],[{'fun',_,_}]}]=Clause, {Attr,Code}) ->
+generate_generator(Name, Line, [{'fun',_,_} = Fun ], {Attr,Code}) ->
     ActiveRingName = list_to_atom(atom_to_list(Name) ++ "_activering"),
-    [{clause,Line,[],[],[Fun]}] = Clause,
     Wrapper = {function,Line,ActiveRingName,0,
-	       [{clause,Line,[],[],[{call,Line,{atom,Line,apply},
-				    [Fun, {nil, Line}]}]}]},
+	       [{clause,Line,[],[],[{call,Line,{atom,Line,Name},
+				     []}]}]},
     {[export(ActiveRingName),
       {attribute,0,export,[{ActiveRingName,0}]}
       |Attr],[Wrapper|Code]};
-generate_generator(Name, [{clause,Line,[],[],[{tuple,_,Elts}]}], {Attr,Code}) 
+generate_generator(Name, Line, [{tuple,_,Elts}], {Attr,Code}) 
   when length(Elts) == 2 ->
-    case lists:all(fun({atom,_,_}) -> true ; (_) -> false end, Elts) of
-	false -> {Attr,Code};
+    case is_mf(Elts) of
+	false -> 
+	    case is_line_something(Elts) of
+		false -> 	
+		    {Attr,Code};
+		{true,Something} ->
+		    generate_generator(Name, Line, Something, {Attr,Code})
+	    end;
 	true ->
 	    ActiveRingName = list_to_atom(atom_to_list(Name) ++ "_activering"),
 	    Wrapper = {function,Line,ActiveRingName,0,
@@ -101,4 +107,20 @@ generate_generator(Name, [{clause,Line,[],[],[{tuple,_,Elts}]}], {Attr,Code})
 	      {attribute,0,export,[{ActiveRingName,0}]} | Attr],
 	     [Wrapper|Code]}
 	      
+    end;
+generate_generator(_,_,_,Acc) ->
+    Acc.
+
+
+is_mf(Elts) ->
+    lists:all(fun({atom,_,_}) -> true ; (_) -> false end, Elts).
+
+is_line_something(Elts) ->
+    [Head|Other] = Elts,
+    case Head of
+	{integer,_,_} ->
+	    {true, Other};
+	_ ->
+	    false
     end.
+    

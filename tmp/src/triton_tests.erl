@@ -2,24 +2,46 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([active_t/0]).
+-test(['4_active_t']).
+-export(['4_active_t'/0]).
+-export([dumb_fun/0]).
 
-a_test() ->
+'1_test'() ->
     ?assertMatch(a,a).
 
-b_test() ->
-    ?assertMatch(a,b).
+'2_test'() ->
+    ?assertMatch(a,a).
 
-basic_test_() ->    
+'3_basic_test_'() ->    
      fun() ->
- 	    ?assertMatch(a,c)
+ 	    ?assertMatch(a,a)
      end.
 
-active_t() ->
+'4_active_t'() ->
     9 = 10 - 1.
 
-basic2_test_() ->
-    fun active_t/0.
+'5_basic_test_'() ->
+    fun dumb_fun/0.
 
-basic3_test_() ->
-    {?MODULE, active_t}.
+'6_basic_test_'() ->
+    {?MODULE, dumb_fun}.
+
+'7_basic_test_'() ->
+    {1, fun () -> ?assertMatch(a,a) end}.
+
+'8_basic_test_'() ->
+    {1, fun dumb_fun/0}.
+
+'9_basic_test_'() ->
+    {1, {?MODULE, dumb_fun}}.
+
+'10_test_'() ->
+    Value = a,
+    fun() ->
+	    ?assertMatch(a, Value)
+    end.
+
+
+
+dumb_fun() ->
+    9 = 10 -1.
